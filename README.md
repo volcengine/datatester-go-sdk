@@ -43,8 +43,8 @@ func main() {
 	// attributes: User properties. Only used for allocating the traffic
 	attributes := map[string]interface{}{
 	}
-	// decisionId(ssid): The local user identifier. Not used for event tracking. You need to replace it with the actual user ID
-	// trackId(userId): The user identifier for event tracking. You need to replace it with the actual user ID
+	// decisionId: The local user identifier. Not used for event tracking. You need to replace it with the actual user ID
+	// trackId(uuid): The user identifier for event tracking. You need to replace it with the actual user ID
 	value, err := abClient.Activate("${experiment_key}", "decisionId", "trackId", true, attributes)
 	if err != nil {
 		return
@@ -315,7 +315,7 @@ func NewRedisUserAbInfoHandler() *RedisAbInfoHandler {
 ```
 
 ### Anonymously tracking
->If there is no user_unique_id as trackId, you can use device_id, web_id, bddid for anonymous tracking.
+>If there is no uuid as trackId, you can use device_id, web_id, bddid(only onpremise) for anonymous tracking.
 1. init anonymous config
 ```
 enable anonymously tracking
@@ -373,8 +373,8 @@ func main() {
 	// attributes: 用户属性
 	attributes := map[string]interface{}{
 	}
-	// decisionId(ssid): 本地分流用户标识，不用于事件上报，请替换为客户的真实用户标识
-	// trackId(userId): 事件上报用户标识，用于事件上报，请替换为客户的真实用户标识
+	// decisionId: 本地分流用户标识，不用于事件上报，请替换为客户的真实用户标识
+	// trackId(uuid): 事件上报用户标识，用于事件上报，请替换为客户的真实用户标识
 	value, err := abClient.Activate("${experiment_key}", "decisionId", "trackId", true, attributes)
 	if err != nil {
 		return
@@ -587,7 +587,7 @@ func NewRedisUserAbInfoHandler() *RedisAbInfoHandler {
 ```
 
 ### 匿名上报
->获取不到user_unique_id的场景下, 可以使用device_id, web_id, bddid进行匿名上报
+>获取不到uuid的用户，可以通过填充device_id或者web_id进行事件上报（私有化场景下也支持bddid）
 1. NewClient时设置匿名上报配置，第一个参数（true/开启，false/关闭）匿名上报，第二个参数（true/saas，false/私有化）
 ```
 client.NewClient("appKey", config.WithAnonymousConfig(true, true))
