@@ -6,7 +6,7 @@
 package cond
 
 import (
-	"github.com/masterminds/semver"
+	"github.com/Masterminds/semver/v3"
 	"reflect"
 )
 
