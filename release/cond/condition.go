@@ -89,11 +89,14 @@ type Condition struct {
 	Type          ConditionValueType  `json:"type"`
 	Method        StringCompareMethod `json:"method"`
 	PropertyType  string              `json:"property_type"`
-
-	valueTyper ConditionValueTyper
 }
 
 func (c *Condition) Evaluate(attributes map[string]interface{}) bool {
+	defer func() {
+		if err := recover(); err != nil {
+			log.WithFields(log.Fields{"err": err}).Error("Evaluate error")
+		}
+	}()
 	if len(c.Key) == 0 {
 		return false
 	}
@@ -112,10 +115,12 @@ func (c *Condition) Evaluate(attributes map[string]interface{}) bool {
 		return false
 	}
 
-	if c.valueTyper == nil {
-		c.generateValueTyper()
+	valueTyper := c.getValueTyper()
+	if valueTyper == nil {
+		log.WithFields(log.Fields{"type": c.Type}).Error("not support type")
+		return false
 	}
-	if !c.valueTyper.EvaluateKind(reflect.ValueOf(attrValue)) {
+	if !valueTyper.EvaluateKind(reflect.ValueOf(attrValue)) {
 		return false
 	}
 
@@ -128,7 +133,7 @@ func (c *Condition) Evaluate(attributes map[string]interface{}) bool {
 		adaptedConditions := make([]interface{}, 0)
 		var adaptedAttrs interface{}
 		for i := 0; i < condValue.Len(); i++ {
-			adaptedCond, adaptedAttr, err := c.valueTyper.AdaptValue(condValue.Index(i).Interface(), attrValue)
+			adaptedCond, adaptedAttr, err := valueTyper.AdaptValue(condValue.Index(i).Interface(), attrValue)
 			if err != nil {
 				log.WithFields(log.Fields{"err": err}).Error("cond value adapt occur an error")
 				return false
@@ -138,11 +143,11 @@ func (c *Condition) Evaluate(attributes map[string]interface{}) bool {
 		}
 		return MathFunc(c.Op)(adaptedAttrs, adaptedConditions, c.Method)
 	}
-	return c.evaluateAttrValue(c.Value, attrValue)
+	return c.evaluateAttrValue(c.Value, attrValue, valueTyper)
 }
 
-func (c *Condition) evaluateAttrValue(condValue, attrValue interface{}) bool {
-	adaptedCond, adaptedAttr, err := c.valueTyper.AdaptValue(condValue, attrValue)
+func (c *Condition) evaluateAttrValue(condValue, attrValue interface{}, valueTyper ConditionValueTyper) bool {
+	adaptedCond, adaptedAttr, err := valueTyper.AdaptValue(condValue, attrValue)
 	if err != nil {
 		log.WithFields(log.Fields{"err": err}).Error("cond value adapt occur an error")
 		return false
@@ -150,14 +155,16 @@ func (c *Condition) evaluateAttrValue(condValue, attrValue interface{}) bool {
 	return MathFunc(c.Op)(adaptedAttr, adaptedCond, c.Method)
 }
 
-func (c *Condition) generateValueTyper() {
+func (c *Condition) getValueTyper() ConditionValueTyper {
 	switch c.Type {
 	case INT, FLOAT, NUMBER:
-		c.valueTyper = &NumberTyper{}
+		return numberValueTyper
 	case BOOL:
-		c.valueTyper = &BoolTyper{}
+		return boolValueTyper
 	case STRING:
-		c.valueTyper = &StringTyper{}
+		return stringValueTyper
+	default:
+		return nil
 	}
 }
 

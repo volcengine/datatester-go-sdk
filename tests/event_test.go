@@ -38,7 +38,7 @@ func TestExposureEventString(t *testing.T) {
 		Events: []*model.Event{e},
 	}
 	str := fmt.Sprintf("events = [%v]", events)
-	assert.True(t, str == "events = [{user: {user_unique_id: ***, user_unique_id_type: test_type}, header: {app_id: 123456, timezone: 8}, events: [{event: abtest_exposure, params: {\"datatester_sdk_version\":\"1.0.3\",\"datatester_sdk_language\":\"golang\",\"$user_unique_id_type\":\"test_type\"}, local_time_ms: 1672893222638, ab_sdk_version: 123}]}]")
+	assert.True(t, str == "events = [{user: {user_unique_id: ***, user_unique_id_type: test_type}, header: {app_id: 123456, timezone: 8}, events: [{event: abtest_exposure, params: {\"datatester_sdk_version\":\"1.0.4\",\"datatester_sdk_language\":\"golang\",\"$user_unique_id_type\":\"test_type\"}, local_time_ms: 1672893222638, ab_sdk_version: 123}]}]")
 }
 
 func TestCreateUser(t *testing.T) {

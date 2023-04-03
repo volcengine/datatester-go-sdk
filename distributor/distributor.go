@@ -52,7 +52,7 @@ func (v *VariantsDistributor) GetFeatureVariant(c *config.ProductConfig, feature
 	if err != nil || len(feature.Id) == 0 || feature.Status != consts.FeatureStatusEnable {
 		return nil, err
 	}
-	variant, err := v.getFeatVariantFromWhiteList(c, featureId, decisionId)
+	variant, err := v.getFeatVariantFromAllowList(c, featureId, decisionId)
 	if err == nil && len(variant.Id) != 0 {
 		return &variant, nil
 	}
@@ -113,7 +113,7 @@ func (v *VariantsDistributor) handleAllowList(experiment e.Experiment, decisionI
 	if !ok {
 		return e.Variant{}
 	}
-	if experiment.FilterWhitelist == consts.NeedFilterAllowList {
+	if experiment.FilterAllowList == consts.NeedFilterAllowList {
 		if experiment.Release.EvaluateFilters(attributes) {
 			return variant
 		}
@@ -245,9 +245,9 @@ func (v *VariantsDistributor) tabExperimentVariantId(experiment e.Experiment, de
 	return vid
 }
 
-func (v *VariantsDistributor) getFeatVariantFromWhiteList(c *config.ProductConfig, featureId,
+func (v *VariantsDistributor) getFeatVariantFromAllowList(c *config.ProductConfig, featureId,
 	decisionId string) (e.Variant, error) {
-	whiteListMap, err := c.GetFeatureWhiteList(featureId)
+	whiteListMap, err := c.GetFeatureAllowList(featureId)
 	if err != nil || len(whiteListMap) == 0 {
 		return e.Variant{}, err
 	}

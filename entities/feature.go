@@ -19,22 +19,22 @@ type Feature struct {
 	LaunchStartTime int64              `json:"launch_start_time"`
 	VariantMap      map[string]Variant `json:"variants"`
 
-	whiteListMap map[string]Variant
+	allowListMap map[string]Variant
 }
 
-func (f *Feature) GetWhiteListMap() map[string]Variant {
-	if f.whiteListMap == nil {
-		f.generateWhiteListMap()
+func (f *Feature) GetAllowListMap() map[string]Variant {
+	if f.allowListMap == nil {
+		f.generateAllowListMap()
 	}
-	return f.whiteListMap
+	return f.allowListMap
 }
 
-func (f *Feature) generateWhiteListMap() {
+func (f *Feature) generateAllowListMap() {
 	if f.WhiteList == nil || len(f.WhiteList) == 0 {
 		return
 	}
-	f.whiteListMap = make(map[string]Variant, len(f.WhiteList))
+	f.allowListMap = make(map[string]Variant, len(f.WhiteList))
 	for uid, vid := range f.WhiteList {
-		f.whiteListMap[uid] = f.VariantMap[vid]
+		f.allowListMap[uid] = f.VariantMap[vid]
 	}
 }

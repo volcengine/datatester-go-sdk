@@ -24,7 +24,7 @@ type Experiment struct {
 	ExperimentMode      int                `json:"experiment_mode"`
 	FatherExperimentId  string             `json:"father_experiment_id"`
 	VariantMap          map[string]Variant `json:"variants"`
-	FilterWhitelist     int                `json:"filter_allowlist"`
+	FilterAllowList     int                `json:"filter_allowlist"`
 	AssociatedRelations []string           `json:"associated_relations"`
 	whiteListMap        map[string]Variant
 }

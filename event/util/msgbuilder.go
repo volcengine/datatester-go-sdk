@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	paramsFormat = "{\"datatester_sdk_version\":\"1.0.3\",\"datatester_sdk_language\":\"golang\"," +
+	paramsFormat = "{\"datatester_sdk_version\":\"1.0.4\",\"datatester_sdk_language\":\"golang\"," +
 		"\"$user_unique_id_type\":\"%s\"}"
 )
 

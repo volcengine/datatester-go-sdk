@@ -13,7 +13,7 @@ Obtain your project's App Key:
 
 ## Install the SDK
 ```
-go get github.com/volcengine/datatester-go-sdk@v1.0.3
+go get github.com/volcengine/datatester-go-sdk@v1.0.4
 ```
 
 ## Using the SDK
@@ -345,7 +345,7 @@ DataTester GO SDK
 
 ## 安装SDK
 ```
-go get github.com/volcengine/datatester-go-sdk@v1.0.3
+go get github.com/volcengine/datatester-go-sdk@v1.0.4
 ```
 
 ## 代码示例

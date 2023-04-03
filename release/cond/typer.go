@@ -20,6 +20,12 @@ const (
 	BOOL   ConditionValueType = "boolean"
 )
 
+var (
+	numberValueTyper = NumberTyper{}
+	boolValueTyper   = BoolTyper{}
+	stringValueTyper = StringTyper{}
+)
+
 type ConditionValueTyper interface {
 	EvaluateKind(v reflect.Value) bool
 	AdaptValue(condValue, attrValue interface{}) (adaptedCond interface{}, adaptedAttr interface{}, err error)
@@ -55,8 +61,6 @@ func (n NumberTyper) AdaptValue(condValue, attrValue interface{}) (float64Cond, 
 	return float64Cond, float64Attr, err
 }
 
-var _ ConditionValueTyper = &NumberTyper{}
-
 type BoolTyper struct {
 }
 
@@ -81,8 +85,6 @@ func (b BoolTyper) AdaptValue(condValue, attrValue interface{}) (boolCond interf
 	return boolCond, boolAttr, err
 }
 
-var _ ConditionValueTyper = &BoolTyper{}
-
 type StringTyper struct {
 }
 
@@ -100,5 +102,3 @@ func (s StringTyper) EvaluateKind(v reflect.Value) bool {
 func (s StringTyper) AdaptValue(condValue, attrValue interface{}) (stringCond interface{}, stringAttr interface{}, err error) {
 	return condValue.(string), attrValue.(string), nil
 }
-
-var _ ConditionValueTyper = &StringTyper{}
