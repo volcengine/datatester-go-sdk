@@ -6,13 +6,14 @@
 package tests
 
 import (
+	"testing"
+	"time"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/volcengine/datatester-go-sdk/client"
 	"github.com/volcengine/datatester-go-sdk/config"
 	abUserInfoHandler "github.com/volcengine/datatester-go-sdk/handler"
 	"github.com/volcengine/datatester-go-sdk/tests/mock"
-	"testing"
-	"time"
 )
 
 func setUp() (*client.AbClient, map[string]interface{}) {
@@ -170,6 +171,20 @@ func TestNewClient(t *testing.T) {
 	abClient := client.NewClient("3ac7ff2fad9d005f97857596a9078aff", config.WithMetaHost(config.MetaHostCN),
 		config.WithTrackHost(config.TrackHostCN),
 		config.WithFetchInterval(30*time.Second), config.WithWorkerNumOnce(5))
+	assert.True(t, abClient != nil)
+	val, _ := abClient.Activate(
+		"go", "decisionId", "trackId", nil, map[string]interface{}{})
+	if val != nil {
+		assert.True(t, val.(string) == "v1" || val.(string) == "v2")
+	}
+}
+
+func TestNewClientWithAllConfig(t *testing.T) {
+	abClient := client.NewClient("3ac7ff2fad9d005f97857596a9078aff", config.WithMetaHost(config.MetaHostCN),
+		config.WithTrackHost(config.TrackHostCN),
+		config.WithFetchInterval(30*time.Second), config.WithWorkerNumOnce(5),
+		config.WithChannelSizeOnce(100000), config.WithHttpMaxConnPerHost(100),
+		config.WithHttpMaxIdleConnPerHost(100), config.WithHttpTotalTimeout(10*time.Second))
 	assert.True(t, abClient != nil)
 	val, _ := abClient.Activate(
 		"go", "decisionId", "trackId", nil, map[string]interface{}{})

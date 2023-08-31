@@ -9,8 +9,6 @@ import (
 	//"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"github.com/volcengine/datatester-go-sdk/event/model"
-	"github.com/volcengine/datatester-go-sdk/log"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -18,6 +16,9 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/volcengine/datatester-go-sdk/event/model"
+	"github.com/volcengine/datatester-go-sdk/log"
 )
 
 var (
@@ -66,7 +67,8 @@ func NewAsyncCollector(config Config) Collector {
 					return net.DialTimeout(network, addr, config.HttpDialTimeout)
 				},
 				DisableKeepAlives:   false,
-				MaxIdleConnsPerHost: config.HttpMaxIdleConnsPerHost,
+				MaxIdleConnsPerHost: config.HttpMaxIdleConnPerHost,
+				MaxConnsPerHost:     config.HttpMaxConnPerHost,
 				IdleConnTimeout:     300 * time.Second,
 				// skip ssl verify
 				// TLSClientConfig:     &tls.Config{InsecureSkipVerify: true},

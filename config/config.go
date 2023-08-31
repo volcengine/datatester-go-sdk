@@ -6,11 +6,12 @@
 package config
 
 import (
+	"time"
+
 	"github.com/volcengine/datatester-go-sdk/event"
 	"github.com/volcengine/datatester-go-sdk/log"
 	"github.com/volcengine/datatester-go-sdk/meta/manager"
 	"github.com/volcengine/datatester-go-sdk/utils/httper"
-	"time"
 )
 
 const (
@@ -53,6 +54,34 @@ func WithFetchInterval(interval time.Duration) Func {
 func WithWorkerNumOnce(workerNum int) Func {
 	return func() (manager.MetaOptionFunc, bool) {
 		event.SetWorkerNum(workerNum)
+		return nil, false
+	}
+}
+
+func WithChannelSizeOnce(channelSize int) Func {
+	return func() (manager.MetaOptionFunc, bool) {
+		event.SetChannelSize(channelSize)
+		return nil, false
+	}
+}
+
+func WithHttpMaxIdleConnPerHost(maxIdleConnNum int) Func {
+	return func() (manager.MetaOptionFunc, bool) {
+		event.SetHttpMaxIdleConnPerHost(maxIdleConnNum)
+		return nil, false
+	}
+}
+
+func WithHttpMaxConnPerHost(maxConnNum int) Func {
+	return func() (manager.MetaOptionFunc, bool) {
+		event.SetHttpMaxConnPerHost(maxConnNum)
+		return nil, false
+	}
+}
+
+func WithHttpTotalTimeout(timeout time.Duration) Func {
+	return func() (manager.MetaOptionFunc, bool) {
+		event.SetHttpTotalTimeout(timeout)
 		return nil, false
 	}
 }

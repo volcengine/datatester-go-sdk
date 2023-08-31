@@ -14,6 +14,7 @@ const (
 	defaultTracePath              = "/v2/event/list"
 	defaultHttpDialTimeout        = 1 * time.Second
 	defaultHttpTotalTimeout       = 5 * time.Second
+	defaultHttpMaxConnPerHost     = 10
 	defaultHttpMaxIdleConnPerHost = 10
 	defaultWorkerNum              = 20
 	defaultChanSize               = 20000
@@ -22,12 +23,13 @@ const (
 )
 
 type Config struct {
-	MscUrl                  string
-	AppKey                  string
-	HttpDialTimeout         time.Duration
-	HttpTotalTimeout        time.Duration
-	HttpMaxIdleConnsPerHost int
-	AsyncConfig             *AsyncConfig
+	MscUrl                 string
+	AppKey                 string
+	HttpDialTimeout        time.Duration
+	HttpTotalTimeout       time.Duration
+	HttpMaxIdleConnPerHost int
+	HttpMaxConnPerHost     int
+	AsyncConfig            *AsyncConfig
 }
 
 type AsyncConfig struct {
@@ -44,17 +46,18 @@ type AnonymousUserConfig struct {
 
 func NewDefaultConfig() Config {
 	asyncConfig := &AsyncConfig{
-		ChannelSize: defaultChanSize,
+		ChannelSize: gChannelSize,
 		WorkerNum:   defaultWorkerNum,
 		BatchSize:   defaultBatchSize,
 		LingerTime:  defaultLingerTime,
 	}
 	return Config{
-		MscUrl:                  defaultTraceUrl,
-		HttpDialTimeout:         defaultHttpDialTimeout,
-		HttpTotalTimeout:        defaultHttpTotalTimeout,
-		HttpMaxIdleConnsPerHost: defaultHttpMaxIdleConnPerHost,
-		AsyncConfig:             asyncConfig,
+		MscUrl:                 defaultTraceUrl,
+		HttpDialTimeout:        defaultHttpDialTimeout,
+		HttpTotalTimeout:       defaultHttpTotalTimeout,
+		HttpMaxIdleConnPerHost: gHttpMaxIdleConnPerHost,
+		HttpMaxConnPerHost:     gHttpMaxConnPerHost,
+		AsyncConfig:            asyncConfig,
 	}
 }
 
@@ -66,6 +69,10 @@ var (
 		Enable: false,
 		IsSaas: true,
 	}
+	gChannelSize            = defaultChanSize
+	gHttpMaxIdleConnPerHost = defaultHttpMaxIdleConnPerHost
+	gHttpMaxConnPerHost     = defaultHttpMaxConnPerHost
+	gHttpTotalTimeout       = defaultHttpTotalTimeout
 )
 
 func SetTraceUrl(traceHost string) {
@@ -76,6 +83,28 @@ func SetWorkerNum(workerNum int) {
 	if workerNum > 0 {
 		gWorkerNum = workerNum
 	}
+}
+
+func SetChannelSize(channelSize int) {
+	if channelSize > 0 {
+		gChannelSize = channelSize
+	}
+}
+
+func SetHttpMaxIdleConnPerHost(maxIdleConnNum int) {
+	if maxIdleConnNum > 0 {
+		gHttpMaxIdleConnPerHost = maxIdleConnNum
+	}
+}
+
+func SetHttpMaxConnPerHost(maxConnNum int) {
+	if maxConnNum > 0 {
+		gHttpMaxConnPerHost = maxConnNum
+	}
+}
+
+func SetHttpTotalTimeout(timeout time.Duration) {
+	gHttpTotalTimeout = timeout
 }
 
 func SetAnonymousUserConfig(enable bool, isSaas bool) {
