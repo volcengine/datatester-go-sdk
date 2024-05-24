@@ -11,6 +11,7 @@ import (
 	"github.com/volcengine/datatester-go-sdk/distributor/bucketer"
 	e "github.com/volcengine/datatester-go-sdk/entities"
 	"github.com/volcengine/datatester-go-sdk/meta/config"
+	"github.com/volcengine/datatester-go-sdk/release"
 	"strings"
 )
 
@@ -113,8 +114,16 @@ func (v *VariantsDistributor) handleAllowList(experiment e.Experiment, decisionI
 	if !ok {
 		return e.Variant{}
 	}
+
+	if experiment.IsUserGroupExperiment() {
+		if v.EvaluateUserGroup(experiment, variant.Id, decisionId, attributes, experiment.FilterAllowList == consts.NeedFilterAllowList) {
+			return variant
+		}
+		return e.Variant{}
+	}
+
 	if experiment.FilterAllowList == consts.NeedFilterAllowList {
-		if experiment.Release.EvaluateFilters(attributes) {
+		if release.EvaluateFilters(experiment.Release.Filters, attributes) {
 			return variant
 		}
 		return e.Variant{}
@@ -172,6 +181,42 @@ func (v *VariantsDistributor) handleFatherExperiment(c *config.ProductConfig, ex
 	return e.Variant{}, nil
 }
 
+func (v *VariantsDistributor) EvaluateUserGroup(experiment e.Experiment, vid string, decisionId string,
+	attributes map[string]interface{}, needFilter bool) bool {
+	var hitUserGroupIds []string
+	for _, r := range experiment.UserGroupReleases {
+		if !needFilter || r.EvaluateRelease(attributes) {
+			hitUserGroupIds = append(hitUserGroupIds, r.UserGroupId)
+		}
+	}
+
+	// choose user group id
+	if len(hitUserGroupIds) == 0 {
+		return false
+	}
+	selectedUserGroupId := hitUserGroupIds[0]
+	if len(hitUserGroupIds) > 1 {
+		index, err := v.bucketService.GetTrafficBucketIndexWithMod(
+			strings.Join([]string{decisionId, experiment.Name, "user-group"}, ":"), int32(len(hitUserGroupIds)))
+		if err != nil {
+			return false
+		}
+		selectedUserGroupId = hitUserGroupIds[index]
+	}
+
+	// write user group id to attributes
+	if _, exist := attributes[consts.UserGroupRelation]; !exist {
+		attributes[consts.UserGroupRelation] = make(map[string]string)
+	}
+	userGroupRelation, ok := attributes[consts.UserGroupRelation].(map[string]string)
+	if !ok {
+		return false
+	}
+	userGroupRelation[vid] = selectedUserGroupId
+
+	return true
+}
+
 func (v *VariantsDistributor) tabExperimentVariant(c *config.ProductConfig, experiment e.Experiment,
 	decisionId string, attributes map[string]interface{},
 	experiment2variant map[string]string, needCache bool) (e.Variant, error) {
@@ -191,6 +236,11 @@ func (v *VariantsDistributor) tabExperimentVariant(c *config.ProductConfig, expe
 	// freeze experiment and traffic changes will not affect exposed users.
 	cacheVariant, freezeErr, shouldContinue := v.handleFreezeStatus(experiment, experiment2variant)
 	if !shouldContinue {
+		// 客群实验，进组不出组仍需满足客群规则
+		if cacheVariant.Id != "" && experiment.IsUserGroupExperiment() && !v.EvaluateUserGroup(experiment, cacheVariant.Id,
+			decisionId, attributes, true) {
+			return e.Variant{}, nil
+		}
 		return cacheVariant, freezeErr
 	}
 
@@ -241,7 +291,16 @@ func (v *VariantsDistributor) tabExperimentVariantId(experiment e.Experiment, de
 	if err != nil {
 		return ""
 	}
+
 	vid := experiment.Release.EvaluateRelease(attributes, vBucketIndex)
+	if vid == "" {
+		return ""
+	}
+
+	if experiment.IsUserGroupExperiment() && !v.EvaluateUserGroup(experiment, vid, decisionId, attributes, true) {
+		return ""
+	}
+
 	return vid
 }
 

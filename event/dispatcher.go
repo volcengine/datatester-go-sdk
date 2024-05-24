@@ -18,8 +18,8 @@ type Dispatcher interface {
 }
 
 type DispatcherImpl struct {
-	appId  uint32
-	header *model.Header
+	appId    uint32
+	timeZone int32
 }
 
 func NewDispatcher(token string) *DispatcherImpl {
@@ -29,8 +29,8 @@ func NewDispatcher(token string) *DispatcherImpl {
 		return nil
 	}
 	d := &DispatcherImpl{
-		appId:  uint32(appId),
-		header: util.CreateHeader(uint32(appId), util.GetTimezone()),
+		appId:    uint32(appId),
+		timeZone: util.GetTimezone(),
 	}
 	return d
 }
@@ -44,9 +44,11 @@ func (d *DispatcherImpl) DispatchEventWithIdType(trackId, vid, uuidType string,
 	e := util.CreateExposureEvent(vid, uuidType)
 	user := util.CreateUser(trackId, uuidType, attributes, GetAnonymousUserConfig().Enable,
 		GetAnonymousUserConfig().IsSaas)
+	header := util.CreateHeader(d.appId, d.timeZone, vid, attributes)
+
 	events := &model.ExposureEvents{
 		User:   user,
-		Header: d.header,
+		Header: header,
 		Events: []*model.Event{e},
 	}
 	if err := GetInstance().CollectEvents(events); err != nil {

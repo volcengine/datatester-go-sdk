@@ -56,6 +56,8 @@ const (
 	IsNotNull          ConditionOpType = "is_not_null"
 )
 
+const CohortKeyName = "cohort"
+
 type MatcherFn func(attrValue interface{}, condValue interface{}, method StringCompareMethod) bool
 
 func MathFunc(op ConditionOpType) MatcherFn {
@@ -99,6 +101,10 @@ func (c *Condition) Evaluate(attributes map[string]interface{}) bool {
 	}()
 	if len(c.Key) == 0 {
 		return false
+	}
+
+	if c.Key == CohortKeyName {
+		return c.JudgeCohort(attributes)
 	}
 
 	if c.Key == consts.ExperimentCohort && c.PropertyType == consts.ExperimentCohort {
@@ -194,4 +200,23 @@ func (c *Condition) JudgeExperimentCohort(attributes map[string]interface{}) boo
 		}
 	}
 	return result
+}
+
+func (c *Condition) JudgeCohort(attributes map[string]interface{}) bool {
+	targetCohortIds, ok := c.Value.([]interface{})
+	if !ok {
+		return false
+	}
+
+	userCohortIdMap, ok := attributes[CohortKeyName].(map[string]bool)
+	if !ok {
+		return false
+	}
+
+	for _, targetCohortId := range targetCohortIds {
+		if id, ok := targetCohortId.(float64); ok && userCohortIdMap[strconv.FormatFloat(id, 'f', 0, 64)] {
+			return c.Op == IN
+		}
+	}
+	return c.Op == NotIn
 }

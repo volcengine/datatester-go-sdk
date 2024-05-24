@@ -32,10 +32,23 @@ func (v *User) String() string {
 type Header struct {
 	AppId    *uint32 `json:"app_id,omitempty"`
 	Timezone *int32  `json:"timezone,omitempty"`
+	Custom   *string `json:"custom,omitempty"`
 }
 
 func (v *Header) String() string {
-	return fmt.Sprintf("{app_id: %v, timezone: %v}", *v.AppId, *v.Timezone)
+	if v.Custom == nil {
+		return fmt.Sprintf("{app_id: %v, timezone: %v}", *v.AppId, *v.Timezone)
+	}
+	return fmt.Sprintf("{app_id: %v, timezone: %v, custom: %v}", *v.AppId, *v.Timezone, *v.Custom)
+}
+
+type HeaderCustom struct {
+	UserGroupId       []*string `json:"user_group_id,omitempty"`
+	UserGroupRelation *string   `json:"abversion2usergroup_id,omitempty"`
+}
+
+func (v *HeaderCustom) String() string {
+	return fmt.Sprintf("{user_group_id: %v, abversion2usergroup_id: %v}", v.UserGroupId, *v.UserGroupRelation)
 }
 
 type Event struct {
