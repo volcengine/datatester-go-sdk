@@ -29,7 +29,13 @@ func (c *CdpClient) UseCohort(decisionId string, cohortIds []string) []string {
 	// gen req
 	var cohortIdStrBuilder strings.Builder
 	cohortIdStrBuilder.WriteString(cohortIds[0])
+	cohortIdMap := make(map[string]bool)
+	cohortIdMap[cohortIds[0]] = true
 	for _, id := range cohortIds[1:] {
+		if cohortIdMap[id] { // 去重
+			continue
+		}
+		cohortIdMap[id] = true
 		cohortIdStrBuilder.WriteString(",")
 		cohortIdStrBuilder.WriteString(id)
 	}
