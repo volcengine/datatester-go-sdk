@@ -90,6 +90,7 @@ func NewDynamicMetaManager(token string, options ...MetaOptionFunc) *DynamicMeta
 	}
 	if err := d.fetchMeta(); err != nil {
 		log.WithFields(log.Fields{"url": d.fetchUrl, "err": err}).Error("fetch meta err")
+		return &d
 	}
 	d.startFetcher()
 	return &d

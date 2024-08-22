@@ -2,7 +2,7 @@ DataTester GO SDK
 ==================
 
 ## Limitation
->This SDK is only supported on **Go v1.14** and later versions.
+>This SDK is only supported on **Go v1.15** and later versions.
 
 ## Prerequisite
 Obtain your project's App Key:
@@ -87,6 +87,17 @@ NewClientWithUserAbInfo(token string, userAbInfoHandler handler.UserAbInfoHandle
 | Parameter         | Description                                                                                                                                                                      | Value |
 |:------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:------|
 | userAbInfoHandler | Ensure that incoming users' information about version ID remains unchanged. If you want to constantly store the information of incoming users, you must implement it by yourself |       |
+
+### SetCohortHandler
+Set a cohort handler used to obtain experiment/feature cohort ids
+```
+func (t *AbClient) SetCohortHandler(handler cohort.Client)
+```
+#### Parameter description
+
+| Parameter     | Description                                                                                                                           |
+|:--------------|:--------------------------------------------------------------------------------------------------------------------------------------|
+| handler       | handler to obtain cohort ids used in experiments or features. You can use the built-in cohort handlers, or customize your own handler | |
 
 ### Activate
 Obtain a specific experiment version's configuration after traffic allocation and automatically track the exposed events.
@@ -314,6 +325,34 @@ func NewRedisUserAbInfoHandler() *RedisAbInfoHandler {
 }
 ```
 
+### Cohort Handler
+>Handler to obtain cohort ids if your experiment / feature uses cohorts as traffic filter. You can either use the built-in cohort handler listed below, or implement your own handler
+
+1. cdp cohort handler (built-in)
+>func NewCdpClient(cdpApi *cdpCli.APIClient, tenantId int64) *CdpClient
+
+for more detail in cdp api, see https://github.com/volcengine/cdp-openapi-sdk-go
+
+2. customize cohort handler
+
+you can customize your own cohort handler by implementing ```cohort.Client``` interface
+
+```
+type Client interface {
+    UseCohort(decisionId string, cohortIds []string) []string
+}
+```
+
+here shows a simple example, obtain cohort from redis
+```
+type redisCohortClient struct {
+}
+
+func (c *redisCohortClient) UseCohort(decisionId string, cohortIds []string) []string {
+	return redis.get(decisionID);
+}
+```
+
 ### Anonymously tracking
 >If there is no uuid as trackId, you can use device_id, web_id, bddid(only onpremise) for anonymous tracking.
 1. init anonymous config
@@ -335,7 +374,7 @@ DataTester GO SDK
 ==================
 
 ## 版本需求
->**Go v1.14**及更高版本
+>**Go v1.15**及更高版本
 
 ## 准备工作
 获取应用的App Key（即SDK使用的token）:
@@ -416,6 +455,17 @@ NewClientWithUserAbInfo(token string, userAbInfoHandler handler.UserAbInfoHandle
 | 参数                | 描述                                   | 值   |
 |:------------------|:-------------------------------------|:----|
 | userAbInfoHandler | 用户进组信息管理接口，提供默认实现，实验冻结和进组不出组场景下需自行实现 |     |
+
+### SetCohortHandler
+设置用户分群handler
+```
+func (t *AbClient) SetCohortHandler(handler cohort.Client)
+```
+#### 参数
+
+| 参数      | 描述                                   |
+|:--------|:-------------------------------------|
+| handler | 用户分群handler。可以用sdk内置的cdp分群接口，也可以自行实现 | |
 
 ### Activate
 获取特定key的分流结果，并上报曝光事件
@@ -583,6 +633,34 @@ func (u *RedisAbInfoHandler) NeedPersistData() bool {
 
 func NewRedisUserAbInfoHandler() *RedisAbInfoHandler {
 	return &RedisAbInfoHandler{}
+}
+```
+
+### Cohort Handler
+>获取分群id，用于判断实验/feature的用户分群过滤条件
+
+1. cdp cohort handler (内置)
+>func NewCdpClient(cdpApi *cdpCli.APIClient, tenantId int64) *CdpClient
+
+cdp api的使用可以参考 https://github.com/volcengine/cdp-openapi-sdk-go
+
+2. 自定义cohort handler
+
+可以通过实现```cohort.Client```接口来自定义cohort handler的实现
+
+```
+type Client interface {
+    UseCohort(decisionId string, cohortIds []string) []string
+}
+```
+
+通过redis获取分群的示例（仅供参考）
+```
+type redisCohortClient struct {
+}
+
+func (c *redisCohortClient) UseCohort(decisionId string, cohortIds []string) []string {
+	return redis.get(decisionID);
 }
 ```
 

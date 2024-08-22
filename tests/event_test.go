@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/volcengine/datatester-go-sdk/client"
 	"github.com/volcengine/datatester-go-sdk/config"
+	"github.com/volcengine/datatester-go-sdk/consts"
 	"github.com/volcengine/datatester-go-sdk/event/model"
 	"github.com/volcengine/datatester-go-sdk/event/util"
 	"testing"
@@ -34,7 +35,7 @@ func TestExposureEventString(t *testing.T) {
 		false, true)
 	events := &model.ExposureEvents{
 		User:   user,
-		Header: util.CreateHeader(uint32(123456), util.GetTimezone()),
+		Header: util.CreateHeader(uint32(123456), util.GetTimezone(), "", make(map[string]interface{})),
 		Events: []*model.Event{e},
 	}
 	str := fmt.Sprintf("events = [%v]", events)
@@ -199,4 +200,20 @@ func TestNotSaasCreateAnonymousUser(t *testing.T) {
 	assert.True(t, user.DeviceId == nil)
 	assert.True(t, *user.WebId == 56789)
 	assert.True(t, user.BdDid == nil)
+}
+
+func TestCreateHeaderUserGroupCustom(t *testing.T) {
+	attributes := make(map[string]interface{})
+
+	header := util.CreateHeader(1, 1, "123", attributes)
+	assert.Nil(t, header.Custom)
+
+	attributes[consts.UserGroupRelation] = make(map[string]string)
+	attributes[consts.UserGroupRelation].(map[string]string)["123"] = "456"
+
+	header = util.CreateHeader(1, 1, "321", attributes)
+	assert.Nil(t, header.Custom)
+
+	header = util.CreateHeader(1, 1, "123", attributes)
+	assert.Equal(t, `{"user_group_id":["456"],"abversion2usergroup_id":"{\"123\":\"456\"}"}`, *header.Custom)
 }

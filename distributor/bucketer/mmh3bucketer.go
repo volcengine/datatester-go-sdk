@@ -55,4 +55,17 @@ func (m *Mmh3BucketService) GetTrafficBucketIndex(hashKey string) (uint32, error
 	return index, nil
 }
 
+func (m *Mmh3BucketService) GetTrafficBucketIndexWithMod(hashKey string, mod int32) (uint32, error) {
+	hashCode, err := m.generateHashCode(hashKey)
+	if err != nil {
+		return 0, err
+	}
+
+	index := hashCode % mod
+	if index < 0 {
+		index += mod
+	}
+	return uint32(index), nil
+}
+
 var _ BucketService = &Mmh3BucketService{}

@@ -6,6 +6,7 @@
 package util
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	"github.com/volcengine/datatester-go-sdk/consts"
@@ -19,11 +20,20 @@ var (
 		"\"$user_unique_id_type\":\"%s\"}"
 )
 
-func CreateHeader(appId uint32, tz int32) *model.Header {
-	return &model.Header{
+func CreateHeader(appId uint32, timezone int32, vid string, attributes map[string]interface{}) *model.Header {
+	header := &model.Header{
 		AppId:    proto.Uint32(appId),
-		Timezone: proto.Int32(tz),
+		Timezone: proto.Int32(timezone),
 	}
+
+	headerCustom := createHeaderCustom(vid, attributes)
+	if headerCustom != nil {
+		if headerCustomBytes, err := json.Marshal(headerCustom); err == nil {
+			header.Custom = proto.String(string(headerCustomBytes))
+		}
+	}
+
+	return header
 }
 
 func CreateExposureEvent(vid, uuidType string) *model.Event {
@@ -79,6 +89,23 @@ func CreateAnonymousUser(trackId, uuidType string, attributes map[string]interfa
 		user.WebId = proto.Int64(webId)
 	}
 	return user
+}
+
+func createHeaderCustom(vid string, attributes map[string]interface{}) *model.HeaderCustom {
+	userGroupRelation, ok := attributes[consts.UserGroupRelation].(map[string]string)
+	if !ok {
+		return nil
+	}
+
+	userGroupId, exist := userGroupRelation[vid]
+	if !exist {
+		return nil
+	}
+
+	return &model.HeaderCustom{
+		UserGroupId:       []*string{proto.String(userGroupId)},
+		UserGroupRelation: proto.String(fmt.Sprintf(`{"%v":"%v"}`, vid, userGroupId)),
+	}
 }
 
 func getIdByType(idType string, attributes map[string]interface{}) int64 {

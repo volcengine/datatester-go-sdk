@@ -20,6 +20,7 @@ type Feature struct {
 	VariantMap      map[string]Variant `json:"variants"`
 
 	allowListMap map[string]Variant
+	CohortIds    []string
 }
 
 func (f *Feature) GetAllowListMap() map[string]Variant {
@@ -37,4 +38,11 @@ func (f *Feature) generateAllowListMap() {
 	for uid, vid := range f.WhiteList {
 		f.allowListMap[uid] = f.VariantMap[vid]
 	}
+}
+
+func (f *Feature) GenerateCohortIds() []string {
+	for _, r := range f.Releases {
+		f.CohortIds = append(f.CohortIds, release.GetFilterCohortIds(r.Filters)...)
+	}
+	return f.CohortIds
 }

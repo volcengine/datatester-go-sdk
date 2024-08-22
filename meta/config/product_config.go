@@ -22,12 +22,17 @@ type ProductConfig struct {
 	// key:name, value:entity id
 	ExperimentNameToIdMap map[string]string
 	FeatureNameToIdMap    map[string]string
+
+	// all cohort ids contained in experiment/feature
+	ExpCohortIds     []string
+	FeatureCohortIds []string
 }
 
 // Init entity map and white list map for cache
 func (c *ProductConfig) Init() {
 	c.generateExperimentNameToIdMap()
 	c.generateFeatureNameToIdMap()
+	c.generateCohortIds()
 }
 
 func (c *ProductConfig) generateExperimentNameToIdMap() {
@@ -41,6 +46,15 @@ func (c *ProductConfig) generateFeatureNameToIdMap() {
 	c.FeatureNameToIdMap = make(map[string]string, len(c.FeatureMap))
 	for id, feature := range c.FeatureMap {
 		c.FeatureNameToIdMap[feature.Name] = id
+	}
+}
+
+func (c *ProductConfig) generateCohortIds() {
+	for _, experiment := range c.ExperimentMap {
+		c.ExpCohortIds = append(c.ExpCohortIds, experiment.GenerateCohortIds()...)
+	}
+	for _, feature := range c.FeatureMap {
+		c.FeatureCohortIds = append(c.FeatureCohortIds, feature.GenerateCohortIds()...)
 	}
 }
 

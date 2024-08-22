@@ -17,3 +17,5 @@ const ExperimentFreezeStatus = 1
 const ExperimentVersionFreezeStatus = 1
 
 const ExperimentCohort = "experiment_cohort"
+
+const UserGroupRelation = "user_group_relation"
