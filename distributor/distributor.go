@@ -254,6 +254,11 @@ func (v *VariantsDistributor) tabExperimentVariant(c *config.ProductConfig, expe
 	if !ok {
 		return e.Variant{}, fmt.Errorf("no layer[%s] exist in config", experiment.LayerID)
 	}
+	// check 互斥域
+	hitDomain := layer.HitDomain(decisionId)
+	if !hitDomain {
+		return e.Variant{}, nil
+	}
 	eid, err := v.tabLayerExperimentId(layer, decisionId)
 	if err != nil || len(eid) == 0 || eid != experiment.Id {
 		return e.Variant{}, err
