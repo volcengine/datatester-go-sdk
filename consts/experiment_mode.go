@@ -6,3 +6,5 @@
 package consts
 
 const CodingExperiment = 1
+const CampaignCodingMode = 32
+const CampaignCodingChildMode = 33

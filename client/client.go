@@ -174,14 +174,23 @@ func (t *AbClient) GetAllExperimentConfigs(decisionId string,
 		variants = append(variants, variant)
 	}
 	configs := make(map[string]map[string]interface{})
+	vid2ExperimentIdMap := make(map[string]string)
 	for _, variant := range variants {
 		confMap := variant.GetConfig()
 		if confMap == nil {
 			continue
 		}
 		for k, v := range confMap {
-			configs[k] = v
+			// 如果k已经存在，则根据优先级比较进行覆盖，priority高的覆盖低的
+			if existConf, ok := configs[k]; ok {
+				if t.coverExistVariantConf4Activate(existConf, variant.ExperimentId, vid2ExperimentIdMap) {
+					configs[k] = v
+				}
+			} else {
+				configs[k] = v
+			}
 		}
+		vid2ExperimentIdMap[variant.Id] = variant.ExperimentId
 	}
 	t.updateUserAbInfo(decisionId, experiment2variant)
 	return configs, nil
@@ -212,7 +221,14 @@ func (t *AbClient) getAllExperimentConfigs4Activate(variantKey, decisionId strin
 			continue
 		}
 		for k, v := range confMap {
-			configs[k] = v
+			// 如果k已经存在，则根据优先级比较进行覆盖，priority高的覆盖低的
+			if existConf, ok := configs[k]; ok {
+				if t.coverExistVariantConf4Activate(existConf, variant.ExperimentId, vid2ExperimentIdMap) {
+					configs[k] = v
+				}
+			} else {
+				configs[k] = v
+			}
 		}
 		vid2ExperimentIdMap[variant.Id] = variant.ExperimentId
 	}
@@ -225,6 +241,28 @@ func (t *AbClient) getAllExperimentConfigs4Activate(variantKey, decisionId strin
 	}
 	t.updateUserAbInfo(decisionId, experiment2variant)
 	return configs, nil
+}
+
+func (t *AbClient) coverExistVariantConf4Activate(existConf map[string]interface{}, newExperimentID string,
+	vid2ExperimentIdMap map[string]string) bool {
+	existVid, ok1 := existConf["vid"].(string)
+	if !ok1 {
+		return false
+	}
+	existExperimentID, ok2 := vid2ExperimentIdMap[existVid]
+	if !ok2 {
+		return false
+	}
+	existExperiment, ok3 := t.metaManager.GetConfig().ExperimentMap[existExperimentID]
+	if !ok3 {
+		return false
+	}
+	newExperiment, ok4 := t.metaManager.GetConfig().ExperimentMap[newExperimentID]
+	if !ok4 {
+		return false
+	}
+	// 优先级相同也覆盖
+	return newExperiment.FlightPriority >= existExperiment.FlightPriority
 }
 
 func (t *AbClient) GetAllExperimentConfigsWithImpression(decisionId string, trackId string,
@@ -327,6 +365,42 @@ func (t *AbClient) ActivateWithVid(variantKey, decisionId, trackId string,
 		}
 	}
 	return nil, fmt.Errorf("no hit experiment or feature")
+}
+
+func (t *AbClient) ActivateWithImpressFatherVariant(variantKey, decisionId, trackId string, defaultValue interface{},
+	attributes map[string]interface{}) (interface{}, error) {
+	if attributes == nil {
+		attributes = make(map[string]interface{})
+	}
+	experimentConfigs, err := t.getAllExperimentConfigs4Activate(variantKey, decisionId, attributes)
+	if err == nil && len(experimentConfigs) != 0 {
+		if value, err := t.activateConfigWithFatherVariant(variantKey, experimentConfigs, trackId, attributes); err == nil {
+			return value, nil
+		}
+	}
+	featureConfigs, err := t.GetAllFeatureConfigs(decisionId, attributes)
+	if err == nil || len(featureConfigs) != 0 {
+		if value, err := t.activateConfig(variantKey, featureConfigs, trackId, attributes); err == nil {
+			return value, nil
+		}
+	}
+	return defaultValue, fmt.Errorf("no hit experiment or feature")
+}
+
+func (t *AbClient) activateConfigWithFatherVariant(variantKey string, Configs map[string]map[string]interface{},
+	trackId string, attributes map[string]interface{}) (interface{}, error) {
+	if valueMap, ok := Configs[variantKey]; ok {
+		if err := t.dispatcher.DispatchEvent(trackId, valueMap["vid"].(string), attributes); err != nil {
+			return nil, err
+		}
+		if fVIDs, ok := valueMap["f_vid"]; ok {
+			if err := t.dispatcher.DispatchEvent(trackId, fVIDs.(string), attributes); err != nil {
+				return nil, err
+			}
+		}
+		return valueMap["val"], nil
+	}
+	return nil, fmt.Errorf("no value exist in config[%v]", variantKey)
 }
 
 func (t *AbClient) activateConfigWithVid(variantKey string, Configs map[string]map[string]interface{},
