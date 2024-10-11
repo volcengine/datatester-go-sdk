@@ -189,6 +189,11 @@ func (t *AbClient) GetAllExperimentConfigs(decisionId string,
 			} else {
 				configs[k] = v
 			}
+			// 一般父子实验，需要把f_vid删除，避免父实验重复曝光
+			exp, ok := t.metaManager.GetConfig().ExperimentMap[variant.ExperimentId]
+			if ok && !exp.IsCodingCampaign() {
+				delete(configs[k], "f_vid")
+			}
 		}
 		vid2ExperimentIdMap[variant.Id] = variant.ExperimentId
 	}
@@ -228,6 +233,11 @@ func (t *AbClient) getAllExperimentConfigs4Activate(variantKey, decisionId strin
 				}
 			} else {
 				configs[k] = v
+			}
+			// 一般父子实验，需要把f_vid删除，避免父实验重复曝光
+			exp, ok := t.metaManager.GetConfig().ExperimentMap[variant.ExperimentId]
+			if ok && !exp.IsCodingCampaign() {
+				delete(configs[k], "f_vid")
 			}
 		}
 		vid2ExperimentIdMap[variant.Id] = variant.ExperimentId
@@ -393,7 +403,7 @@ func (t *AbClient) activateConfigWithFatherVariant(variantKey string, Configs ma
 		if err := t.dispatcher.DispatchEvent(trackId, valueMap["vid"].(string), attributes); err != nil {
 			return nil, err
 		}
-		if fVIDs, ok := valueMap["f_vid"]; ok {
+		if fVIDs, ok := valueMap["f_vid"]; ok && len(fVIDs.(string)) != 0 {
 			if err := t.dispatcher.DispatchEvent(trackId, fVIDs.(string), attributes); err != nil {
 				return nil, err
 			}
