@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/volcengine/datatester-go-sdk/cohort"
 	"github.com/volcengine/datatester-go-sdk/config"
+	"github.com/volcengine/datatester-go-sdk/consts"
 	"github.com/volcengine/datatester-go-sdk/distributor"
 	"github.com/volcengine/datatester-go-sdk/entities"
 	"github.com/volcengine/datatester-go-sdk/event"
@@ -194,6 +195,10 @@ func (t *AbClient) GetAllExperimentConfigs(decisionId string,
 			if ok && !exp.IsCodingCampaign() {
 				delete(configs[k], "f_vid")
 			}
+			// 编程父实验，key是随机的，不返回configs
+			if exp.ExperimentMode == consts.CampaignCodingMode {
+				delete(configs, k)
+			}
 		}
 		vid2ExperimentIdMap[variant.Id] = variant.ExperimentId
 	}
@@ -238,6 +243,10 @@ func (t *AbClient) getAllExperimentConfigs4Activate(variantKey, decisionId strin
 			exp, ok := t.metaManager.GetConfig().ExperimentMap[variant.ExperimentId]
 			if ok && !exp.IsCodingCampaign() {
 				delete(configs[k], "f_vid")
+			}
+			// 编程父实验，key是随机的，不返回configs
+			if exp.ExperimentMode == consts.CampaignCodingMode {
+				delete(configs, k)
 			}
 		}
 		vid2ExperimentIdMap[variant.Id] = variant.ExperimentId
