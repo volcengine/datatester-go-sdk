@@ -16,6 +16,7 @@ import (
 	"github.com/volcengine/datatester-go-sdk/handler"
 	"github.com/volcengine/datatester-go-sdk/log"
 	"github.com/volcengine/datatester-go-sdk/meta/manager"
+	"github.com/volcengine/datatester-go-sdk/utils"
 )
 
 type AbClient struct {
@@ -180,7 +181,10 @@ func (t *AbClient) GetAllExperimentConfigs(decisionId string,
 			continue
 		}
 		for k, v := range confMap {
-			configs[k] = v
+			existConfig, conflict := configs[k]
+			if !conflict || utils.IsHigherPriorityConfig(existConfig, v) {
+				configs[k] = v
+			}
 		}
 	}
 	t.updateUserAbInfo(decisionId, experiment2variant)
@@ -212,7 +216,10 @@ func (t *AbClient) getAllExperimentConfigs4Activate(variantKey, decisionId strin
 			continue
 		}
 		for k, v := range confMap {
-			configs[k] = v
+			existConfig, conflict := configs[k]
+			if !conflict || utils.IsHigherPriorityConfig(existConfig, v) {
+				configs[k] = v
+			}
 		}
 		vid2ExperimentIdMap[variant.Id] = variant.ExperimentId
 	}
@@ -426,7 +433,10 @@ func (t *AbClient) GetAllFeatureConfigs(decisionId string,
 			continue
 		}
 		for k, v := range confMap {
-			configs[k] = v
+			existConfig, conflict := configs[k]
+			if !conflict || utils.IsHigherPriorityConfig(existConfig, v) {
+				configs[k] = v
+			}
 		}
 	}
 	return configs, nil
