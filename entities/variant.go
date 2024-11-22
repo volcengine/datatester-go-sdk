@@ -21,6 +21,9 @@ func (v *Variant) GetConfig() map[string]map[string]interface{} {
 	config := make(map[string]map[string]interface{})
 	for key, value := range v.Config {
 		config[key] = map[string]interface{}{"val": value.Value, "vid": v.Id}
+		if v.FatherVariantIds != nil && len(v.FatherVariantIds) > 0 {
+			config[key]["f_vid"] = v.FatherVariantIds[0]
+		}
 	}
 	return config
 }
