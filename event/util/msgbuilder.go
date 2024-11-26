@@ -48,7 +48,7 @@ func CreateExposureEvent(vid, uuidType string) *model.Event {
 
 func CreateUser(trackId, uuidType string, attributes map[string]interface{},
 	enableAnonymousUser, isSaasEnv bool) *model.User {
-	if enableAnonymousUser && trackId == "" && attributes != nil {
+	if (enableAnonymousUser || trackId == "") && attributes != nil {
 		return CreateAnonymousUser(trackId, uuidType, attributes, isSaasEnv)
 	}
 	return &model.User{
