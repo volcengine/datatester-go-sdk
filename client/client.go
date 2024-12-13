@@ -175,6 +175,7 @@ func (t *AbClient) GetAllExperimentConfigs(decisionId string,
 		variants = append(variants, variant)
 	}
 	configs := make(map[string]map[string]interface{})
+	vid2ExperimentIdMap := make(map[string]string)
 	for _, variant := range variants {
 		confMap := variant.GetConfig()
 		if confMap == nil {
@@ -182,10 +183,12 @@ func (t *AbClient) GetAllExperimentConfigs(decisionId string,
 		}
 		for k, v := range confMap {
 			existConfig, conflict := configs[k]
-			if !conflict || utils.IsHigherPriorityConfig(existConfig, v) {
+			if !conflict || utils.IsHigherPriorityConfig2(existConfig, v,
+				vid2ExperimentIdMap[existConfig["vid"].(string)], variant.ExperimentId, t.metaManager.GetConfig().ExperimentMap) {
 				configs[k] = v
 			}
 		}
+		vid2ExperimentIdMap[variant.Id] = variant.ExperimentId
 	}
 	t.updateUserAbInfo(decisionId, experiment2variant)
 	return configs, nil
@@ -217,7 +220,8 @@ func (t *AbClient) getAllExperimentConfigs4Activate(variantKey, decisionId strin
 		}
 		for k, v := range confMap {
 			existConfig, conflict := configs[k]
-			if !conflict || utils.IsHigherPriorityConfig(existConfig, v) {
+			if !conflict || utils.IsHigherPriorityConfig2(existConfig, v,
+				vid2ExperimentIdMap[existConfig["vid"].(string)], variant.ExperimentId, t.metaManager.GetConfig().ExperimentMap) {
 				configs[k] = v
 			}
 		}
@@ -433,10 +437,7 @@ func (t *AbClient) GetAllFeatureConfigs(decisionId string,
 			continue
 		}
 		for k, v := range confMap {
-			existConfig, conflict := configs[k]
-			if !conflict || utils.IsHigherPriorityConfig(existConfig, v) {
-				configs[k] = v
-			}
+			configs[k] = v
 		}
 	}
 	return configs, nil

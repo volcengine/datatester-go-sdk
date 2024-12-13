@@ -220,7 +220,7 @@ func (v *VariantsDistributor) EvaluateUserGroup(experiment e.Experiment, vid str
 func (v *VariantsDistributor) tabExperimentVariant(c *config.ProductConfig, experiment e.Experiment,
 	decisionId string, attributes map[string]interface{},
 	experiment2variant map[string]string, needCache bool) (e.Variant, error) {
-	if !experiment.IsCodingExperiment() {
+	if !experiment.IsCodingExperiment() && !experiment.IsCodingCampaign() {
 		return e.Variant{}, fmt.Errorf("experiment[%s] is not coding experiment", experiment.Id)
 	}
 

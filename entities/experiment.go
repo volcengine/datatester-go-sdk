@@ -28,6 +28,7 @@ type Experiment struct {
 	AssociatedRelations []string                   `json:"associated_relations"`
 	ManageSubType       string                     `json:"manage_sub_type"`
 	UserGroupReleases   []release.UserGroupRelease `json:"user_group_releases"`
+	FlightPriority      int64                      `json:"experiment_priority"`
 	whiteListMap        map[string]Variant
 	CohortIds           []string
 }
@@ -63,4 +64,8 @@ func (e *Experiment) IsCodingExperiment() bool {
 
 func (e *Experiment) IsUserGroupExperiment() bool {
 	return e.ManageSubType == consts.UserGroupExperimentSubType
+}
+
+func (e *Experiment) IsCodingCampaign() bool {
+	return e.ExperimentMode == consts.CampaignCodingMode || e.ExperimentMode == consts.CampaignCodingChildMode
 }
