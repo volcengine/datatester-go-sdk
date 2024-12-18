@@ -251,6 +251,40 @@ func (t *AbClient) GetAllExperimentConfigsWithImpression(decisionId string, trac
 	return nil, fmt.Errorf("no hit experiment or feature")
 }
 
+// GetExperimentConfigsWithImpressionWithVariantKeys 获取指定变体list的实验配置，并返回指定变体键的值
+// 参数:
+//   - decisionId: 分流ID
+//   - trackId: 上报ID
+//   - variantKeys: 变体键列表
+//   - attributes: 属性映射
+//
+// 返回值:
+//   - 变体对应的值映射，如果变体没有命中任何实验，则变体的值为nil
+//   - 错误信息
+func (t *AbClient) GetExperimentConfigsWithImpressionWithVariantKeys(decisionId string, trackId string,
+	variantKeys []string, attributes map[string]interface{}) (map[string]interface{}, error) {
+	if attributes == nil {
+		attributes = make(map[string]interface{})
+	}
+	if len(variantKeys) == 0 {
+		return nil, fmt.Errorf("variantKeys is empty")
+	}
+	allExperimentConfigs, err1 := t.GetAllExperimentConfigs(decisionId, attributes)
+	if err1 != nil {
+		return nil, err1
+	}
+	variantsResult := make(map[string]interface{})
+	for _, variantKey := range variantKeys {
+		if valueMap, ok := allExperimentConfigs[variantKey]; ok {
+			variantsResult[variantKey] = valueMap["val"]
+			_ = t.dispatcher.DispatchEvent(trackId, valueMap["vid"].(string), attributes)
+			continue
+		}
+		variantsResult[variantKey] = nil
+	}
+	return variantsResult, nil
+}
+
 func (t *AbClient) Activate(variantKey, decisionId, trackId string, defaultValue interface{},
 	attributes map[string]interface{}) (interface{}, error) {
 	if attributes == nil {
