@@ -20,6 +20,16 @@ func setUpWithHandler() (*client.AbClient, map[string]interface{}) {
 	return client.NewClient4Test(mock.MetaMock, handler), make(map[string]interface{})
 }
 
+func TestGetExperimentConfigsWithImpressionWithVariantKeys(t *testing.T) {
+	abClient, attributes := setUpWithHandler()
+	c, _ := abClient.GetExperimentConfigsWithImpressionWithVariantKeys(
+		"lhy_test1", "7292123093415130239",
+		[]string{"father", "filter_param", "no_hit"}, attributes)
+	assert.True(t, c["father"] == "a")
+	assert.True(t, c["filter_param"] == "b")
+	assert.True(t, c["no_hit"] == nil)
+}
+
 func TestFreezeVersion(t *testing.T) {
 	abClient, attributes := setUpWithHandler()
 	clearCache()
