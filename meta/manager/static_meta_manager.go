@@ -6,9 +6,9 @@
 package manager
 
 import (
-	"encoding/json"
 	"github.com/volcengine/datatester-go-sdk/log"
 	"github.com/volcengine/datatester-go-sdk/meta/config"
+	"github.com/volcengine/datatester-go-sdk/utils"
 )
 
 type StaticMetaManager struct {
@@ -26,7 +26,7 @@ func NewStaticMetaManager(metafile []byte) *StaticMetaManager {
 
 func (s *StaticMetaManager) SetConfig(metafile []byte) {
 	productConfig := &config.ProductConfig{}
-	err := json.Unmarshal(metafile, &productConfig)
+	err := utils.NumberJsonApi.Unmarshal(metafile, &productConfig)
 	if err != nil {
 		log.WithFields(log.Fields{"err": err}).Error("product config json loads err")
 		return
