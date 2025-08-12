@@ -1,9 +1,10 @@
 package utils
 
 import (
-	et "github.com/volcengine/datatester-go-sdk/entities"
 	"strconv"
 	"strings"
+
+	et "github.com/volcengine/datatester-go-sdk/entities"
 )
 
 func IsHigherPriorityConfig(existConf, newConf map[string]interface{}) bool {
@@ -20,7 +21,7 @@ func IsHigherPriorityConfig(existConf, newConf map[string]interface{}) bool {
 
 // IsHigherPriorityConfig2 判断new的优先级是否高于exist
 func IsHigherPriorityConfig2(existConf, newConf map[string]interface{},
-	existExpID string, newExpID string, experimentMap map[string]et.Experiment) bool {
+	existExpID string, newExpID string, experimentMap map[string]*et.Experiment) bool {
 	existExp, exist1 := experimentMap[existExpID]
 	newExp, exist2 := experimentMap[newExpID]
 	if !exist1 {

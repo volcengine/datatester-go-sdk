@@ -8,16 +8,17 @@ package config
 import (
 	"errors"
 	"fmt"
+
 	et "github.com/volcengine/datatester-go-sdk/entities"
 )
 
 type ProductConfig struct {
-	AppId         string                   `json:"app_id"`
-	HashStrategy  string                   `json:"hash_strategy"`
-	ModifyTime    int                      `json:"modify_time"`
-	LayerMap      map[string]et.Layer      `json:"layers"`
-	ExperimentMap map[string]et.Experiment `json:"experiments"`
-	FeatureMap    map[string]et.Feature    `json:"features"`
+	AppId         string                    `json:"app_id"`
+	HashStrategy  string                    `json:"hash_strategy"`
+	ModifyTime    int                       `json:"modify_time"`
+	LayerMap      map[string]*et.Layer      `json:"layers"`
+	ExperimentMap map[string]*et.Experiment `json:"experiments"`
+	FeatureMap    map[string]*et.Feature    `json:"features"`
 
 	// key:name, value:entity id
 	ExperimentNameToIdMap map[string]string
@@ -58,24 +59,24 @@ func (c *ProductConfig) generateCohortIds() {
 	}
 }
 
-func (c *ProductConfig) GetExperimentFromId(experimentId string) (et.Experiment, error) {
+func (c *ProductConfig) GetExperimentFromId(experimentId string) (*et.Experiment, error) {
 	if c.ExperimentMap == nil {
-		return et.Experiment{}, errors.New("no experiments in product config")
+		return &et.Experiment{}, errors.New("no experiments in product config")
 	}
 	if experiment, ok := c.ExperimentMap[experimentId]; ok {
 		return experiment, nil
 	}
-	return et.Experiment{}, fmt.Errorf("failed to find experiment[%s]", experimentId)
+	return &et.Experiment{}, fmt.Errorf("failed to find experiment[%s]", experimentId)
 }
 
-func (c *ProductConfig) GetFeatureFromId(featureId string) (et.Feature, error) {
+func (c *ProductConfig) GetFeatureFromId(featureId string) (*et.Feature, error) {
 	if c.FeatureMap == nil {
-		return et.Feature{}, errors.New("no features in product config")
+		return &et.Feature{}, errors.New("no features in product config")
 	}
 	if feature, ok := c.FeatureMap[featureId]; ok {
 		return feature, nil
 	}
-	return et.Feature{}, fmt.Errorf("failed to find feature[%s]", featureId)
+	return &et.Feature{}, fmt.Errorf("failed to find feature[%s]", featureId)
 }
 
 func (c *ProductConfig) GetFeatureAllowList(featureId string) (map[string]et.Variant, error) {
