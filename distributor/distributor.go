@@ -6,6 +6,7 @@
 package distributor
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -29,6 +30,9 @@ type VariantsDistributor struct {
 	bucketService *bucketer.Mmh3BucketService
 	emptyVariant  *e.Variant
 }
+
+var ErrExperimentNotRunning = errors.New("experiment not running")
+var ErrLayerIDNotExist = errors.New("layer id not exist")
 
 func NewVariantsDistributor() *VariantsDistributor {
 	return &VariantsDistributor{
@@ -249,13 +253,13 @@ func (v *VariantsDistributor) tabExperimentVariant(c *config.ProductConfig, expe
 
 	// validating experiments only handle allow list
 	if experiment.Status != consts.RUNNING {
-		return v.emptyVariant, fmt.Errorf("experiment[%s] status is [%d]", experiment.Id, experiment.Status)
+		return v.emptyVariant, ErrExperimentNotRunning
 	}
 
 	// layer hash -> experiment
 	layer, ok := c.LayerMap[experiment.LayerID]
 	if !ok {
-		return v.emptyVariant, fmt.Errorf("no layer[%s] exist in config", experiment.LayerID)
+		return v.emptyVariant, ErrLayerIDNotExist
 	}
 	// check 互斥域
 	hitDomain := layer.HitDomain(decisionId)
