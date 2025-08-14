@@ -27,11 +27,13 @@ type Distributor interface {
 
 type VariantsDistributor struct {
 	bucketService *bucketer.Mmh3BucketService
+	emptyVariant  *e.Variant
 }
 
 func NewVariantsDistributor() *VariantsDistributor {
 	return &VariantsDistributor{
 		bucketService: bucketer.NewMmh3BucketService(),
+		emptyVariant:  &e.Variant{},
 	}
 }
 
@@ -109,25 +111,25 @@ func (v *VariantsDistributor) handleAllowList(experiment *e.Experiment, decision
 	attributes map[string]interface{}) *e.Variant {
 	whiteListMap := experiment.GetWhiteListMap()
 	if len(whiteListMap) == 0 {
-		return &e.Variant{}
+		return v.emptyVariant
 	}
 	variant, ok := whiteListMap[decisionId]
 	if !ok {
-		return &e.Variant{}
+		return v.emptyVariant
 	}
 
 	if experiment.IsUserGroupExperiment() {
 		if v.EvaluateUserGroup(experiment, variant.Id, decisionId, attributes, experiment.FilterAllowList == consts.NeedFilterAllowList) {
 			return variant
 		}
-		return &e.Variant{}
+		return v.emptyVariant
 	}
 
 	if experiment.FilterAllowList == consts.NeedFilterAllowList {
 		if release.EvaluateFilters(experiment.Release.Filters, attributes) {
 			return variant
 		}
-		return &e.Variant{}
+		return v.emptyVariant
 	}
 	return variant
 }
@@ -144,7 +146,7 @@ func (v *VariantsDistributor) handleFreezeStatus(experiment *e.Experiment,
 	experiment2variant map[string]string) (*e.Variant, error, bool) {
 	if experiment.FreezeStatus != consts.ExperimentFreezeStatus &&
 		experiment.VersionFreezeStatus != consts.ExperimentVersionFreezeStatus {
-		return &e.Variant{}, nil, true
+		return v.emptyVariant, nil, true
 	}
 	variantId, vidExist := experiment2variant[experiment.Id]
 	if vidExist {
@@ -154,9 +156,9 @@ func (v *VariantsDistributor) handleFreezeStatus(experiment *e.Experiment,
 		}
 	}
 	if experiment.FreezeStatus == consts.ExperimentFreezeStatus {
-		return &e.Variant{}, fmt.Errorf("experiment[%s] is freeze", experiment.Id), false
+		return v.emptyVariant, fmt.Errorf("experiment[%s] is freeze", experiment.Id), false
 	}
-	return &e.Variant{}, nil, true
+	return v.emptyVariant, nil, true
 }
 
 func (v *VariantsDistributor) handleFatherExperiment(c *config.ProductConfig, experiment *e.Experiment,
@@ -167,19 +169,19 @@ func (v *VariantsDistributor) handleFatherExperiment(c *config.ProductConfig, ex
 	}
 	fatherExperiment, ok := c.ExperimentMap[experiment.FatherExperimentId]
 	if !ok {
-		return &e.Variant{}, fmt.Errorf("no father experiment[%s] exist in config", experiment.FatherExperimentId)
+		return v.emptyVariant, fmt.Errorf("no father experiment[%s] exist in config", experiment.FatherExperimentId)
 	}
 	fatherVariant, err := v.tabExperimentVariant(c, fatherExperiment, decisionId,
 		attributes, experiment2variant, false)
 	if err != nil || len(fatherVariant.Id) == 0 {
-		return &e.Variant{}, nil
+		return v.emptyVariant, nil
 	}
 	for _, fatherVid := range variant.FatherVariantIds {
 		if fatherVid == fatherVariant.Id {
 			return v.handleCacheAndReturnVariant(variant, experiment2variant, needCache, experiment.Id)
 		}
 	}
-	return &e.Variant{}, nil
+	return v.emptyVariant, nil
 }
 
 func (v *VariantsDistributor) EvaluateUserGroup(experiment *e.Experiment, vid string, decisionId string,
@@ -222,7 +224,7 @@ func (v *VariantsDistributor) tabExperimentVariant(c *config.ProductConfig, expe
 	decisionId string, attributes map[string]interface{},
 	experiment2variant map[string]string, needCache bool) (*e.Variant, error) {
 	if !experiment.IsCodingExperiment() && !experiment.IsCodingCampaign() {
-		return &e.Variant{}, fmt.Errorf("experiment[%s] is not coding experiment", experiment.Id)
+		return v.emptyVariant, fmt.Errorf("experiment[%s] is not coding experiment", experiment.Id)
 	}
 
 	// handle association experiments
@@ -240,33 +242,33 @@ func (v *VariantsDistributor) tabExperimentVariant(c *config.ProductConfig, expe
 		// 客群实验，进组不出组仍需满足客群规则
 		if cacheVariant.Id != "" && experiment.IsUserGroupExperiment() && !v.EvaluateUserGroup(experiment, cacheVariant.Id,
 			decisionId, attributes, true) {
-			return &e.Variant{}, nil
+			return v.emptyVariant, nil
 		}
 		return cacheVariant, freezeErr
 	}
 
 	// validating experiments only handle allow list
 	if experiment.Status != consts.RUNNING {
-		return &e.Variant{}, fmt.Errorf("experiment[%s] status is [%d]", experiment.Id, experiment.Status)
+		return v.emptyVariant, fmt.Errorf("experiment[%s] status is [%d]", experiment.Id, experiment.Status)
 	}
 
 	// layer hash -> experiment
 	layer, ok := c.LayerMap[experiment.LayerID]
 	if !ok {
-		return &e.Variant{}, fmt.Errorf("no layer[%s] exist in config", experiment.LayerID)
+		return v.emptyVariant, fmt.Errorf("no layer[%s] exist in config", experiment.LayerID)
 	}
 	// check 互斥域
 	hitDomain := layer.HitDomain(decisionId)
 	if !hitDomain {
-		return &e.Variant{}, nil
+		return v.emptyVariant, nil
 	}
 	eid, err := v.tabLayerExperimentId(layer, decisionId)
 	if err != nil || len(eid) == 0 || eid != experiment.Id {
-		return &e.Variant{}, err
+		return v.emptyVariant, err
 	}
 	vid := v.tabExperimentVariantId(experiment, decisionId, attributes)
 	if len(vid) == 0 {
-		return &e.Variant{}, nil
+		return v.emptyVariant, nil
 	}
 	variant := experiment.VariantMap[vid]
 
