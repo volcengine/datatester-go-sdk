@@ -30,7 +30,7 @@ func IsHigherPriorityConfig2(existConf, newConf map[string]interface{},
 	if !exist2 {
 		return false
 	}
-	if !existExp.IsCodingExperiment() && !newExp.IsCodingExperiment() {
+	if !existExp.IsCodingCampaign() && !newExp.IsCodingCampaign() {
 		vid1 := existConf["vid"].(string)
 		vid2 := newConf["vid"].(string)
 		v1, err1 := strconv.ParseInt(vid1, 10, 64)
