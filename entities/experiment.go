@@ -34,13 +34,13 @@ type Experiment struct {
 }
 
 func (e *Experiment) GetWhiteListMap() map[string]*Variant {
-	if e.whiteListMap == nil {
-		e.generateWhiteListMap()
-	}
+	//if e.whiteListMap == nil {
+	//	e.GenerateWhiteListMap()
+	//}
 	return e.whiteListMap
 }
 
-func (e *Experiment) generateWhiteListMap() {
+func (e *Experiment) GenerateWhiteListMap() {
 	if e.WhiteList == nil || len(e.WhiteList) == 0 {
 		return
 	}

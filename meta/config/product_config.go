@@ -34,6 +34,13 @@ func (c *ProductConfig) Init() {
 	c.generateExperimentNameToIdMap()
 	c.generateFeatureNameToIdMap()
 	c.generateCohortIds()
+	c.generateExperimentWhiteList()
+}
+
+func (c *ProductConfig) generateExperimentWhiteList() {
+	for _, experiment := range c.ExperimentMap {
+		experiment.GenerateWhiteListMap()
+	}
 }
 
 func (c *ProductConfig) generateExperimentNameToIdMap() {
