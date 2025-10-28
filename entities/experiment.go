@@ -23,28 +23,28 @@ type Experiment struct {
 	SaveParam           int                        `json:"save_param"`
 	ExperimentMode      int                        `json:"experiment_mode"`
 	FatherExperimentId  string                     `json:"father_experiment_id"`
-	VariantMap          map[string]Variant         `json:"variants"`
+	VariantMap          map[string]*Variant        `json:"variants"`
 	FilterAllowList     int                        `json:"filter_allowlist"`
 	AssociatedRelations []string                   `json:"associated_relations"`
 	ManageSubType       string                     `json:"manage_sub_type"`
 	UserGroupReleases   []release.UserGroupRelease `json:"user_group_releases"`
 	FlightPriority      int64                      `json:"experiment_priority"`
-	whiteListMap        map[string]Variant
+	whiteListMap        map[string]*Variant
 	CohortIds           []string
 }
 
-func (e *Experiment) GetWhiteListMap() map[string]Variant {
-	if e.whiteListMap == nil {
-		e.generateWhiteListMap()
-	}
+func (e *Experiment) GetWhiteListMap() map[string]*Variant {
+	//if e.whiteListMap == nil {
+	//	e.GenerateWhiteListMap()
+	//}
 	return e.whiteListMap
 }
 
-func (e *Experiment) generateWhiteListMap() {
+func (e *Experiment) GenerateWhiteListMap() {
 	if e.WhiteList == nil || len(e.WhiteList) == 0 {
 		return
 	}
-	e.whiteListMap = make(map[string]Variant, len(e.WhiteList))
+	e.whiteListMap = make(map[string]*Variant, len(e.WhiteList))
 	for uid, vid := range e.WhiteList {
 		e.whiteListMap[uid] = e.VariantMap[vid]
 	}
