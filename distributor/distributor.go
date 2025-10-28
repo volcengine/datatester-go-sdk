@@ -62,13 +62,13 @@ func (v *VariantsDistributor) GetFeatureVariant(c *config.ProductConfig, feature
 	}
 	variant, err := v.getFeatVariantFromAllowList(c, featureId, decisionId)
 	if err == nil && len(variant.Id) != 0 {
-		return &variant, nil
+		return variant, nil
 	}
 	variant, err = v.tabFeatureVariant(feature, decisionId, attributes)
 	if err != nil || len(variant.Id) == 0 {
 		return nil, err
 	}
-	return &variant, nil
+	return variant, nil
 }
 
 func (v *VariantsDistributor) GetAllFeatureVariants(c *config.ProductConfig, decisionId string,
@@ -317,26 +317,26 @@ func (v *VariantsDistributor) tabExperimentVariantId(experiment *e.Experiment, d
 }
 
 func (v *VariantsDistributor) getFeatVariantFromAllowList(c *config.ProductConfig, featureId,
-	decisionId string) (e.Variant, error) {
+	decisionId string) (*e.Variant, error) {
 	whiteListMap, err := c.GetFeatureAllowList(featureId)
 	if err != nil || len(whiteListMap) == 0 {
-		return e.Variant{}, err
+		return v.emptyVariant, err
 	}
 	variant, ok := whiteListMap[decisionId]
 	if !ok {
-		return e.Variant{}, nil
+		return v.emptyVariant, nil
 	}
 	return variant, nil
 }
 
 func (v *VariantsDistributor) tabFeatureVariant(feature *e.Feature, decisionId string,
-	attributes map[string]interface{}) (e.Variant, error) {
+	attributes map[string]interface{}) (*e.Variant, error) {
 	if feature.Releases == nil || len(feature.Releases) == 0 {
-		return e.Variant{}, nil
+		return v.emptyVariant, nil
 	}
 	vBucketIndex, err := v.bucketService.GetTrafficBucketIndex(strings.Join([]string{decisionId, feature.Name}, ":"))
 	if err != nil {
-		return e.Variant{}, err
+		return v.emptyVariant, err
 	}
 	for _, r := range feature.Releases {
 		vid := r.EvaluateRelease(attributes, vBucketIndex)
@@ -344,7 +344,7 @@ func (v *VariantsDistributor) tabFeatureVariant(feature *e.Feature, decisionId s
 			return feature.VariantMap[vid], nil
 		}
 	}
-	return e.Variant{}, nil
+	return v.emptyVariant, nil
 }
 
 var _ Distributor = &VariantsDistributor{}

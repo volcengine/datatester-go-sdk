@@ -35,11 +35,18 @@ func (c *ProductConfig) Init() {
 	c.generateFeatureNameToIdMap()
 	c.generateCohortIds()
 	c.generateExperimentWhiteList()
+	c.generateFeatureAllowList()
 }
 
 func (c *ProductConfig) generateExperimentWhiteList() {
 	for _, experiment := range c.ExperimentMap {
 		experiment.GenerateWhiteListMap()
+	}
+}
+
+func (c *ProductConfig) generateFeatureAllowList() {
+	for _, feature := range c.FeatureMap {
+		feature.GenerateAllowListMap()
 	}
 }
 
@@ -86,7 +93,7 @@ func (c *ProductConfig) GetFeatureFromId(featureId string) (*et.Feature, error) 
 	return &et.Feature{}, fmt.Errorf("failed to find feature[%s]", featureId)
 }
 
-func (c *ProductConfig) GetFeatureAllowList(featureId string) (map[string]et.Variant, error) {
+func (c *ProductConfig) GetFeatureAllowList(featureId string) (map[string]*et.Variant, error) {
 	feature, err := c.GetFeatureFromId(featureId)
 	if err != nil {
 		return nil, err
