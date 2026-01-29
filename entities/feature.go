@@ -10,31 +10,31 @@ import (
 )
 
 type Feature struct {
-	Id              string             `json:"id"`
-	Name            string             `json:"name"`
-	Key             string             `json:"variant_key"`
-	Releases        []release.Release  `json:"releases"`
-	Status          int                `json:"status"`
-	WhiteList       map[string]string  `json:"white_list"`
-	LaunchStartTime int64              `json:"launch_start_time"`
-	VariantMap      map[string]Variant `json:"variants"`
+	Id              string              `json:"id"`
+	Name            string              `json:"name"`
+	Key             string              `json:"variant_key"`
+	Releases        []release.Release   `json:"releases"`
+	Status          int                 `json:"status"`
+	WhiteList       map[string]string   `json:"white_list"`
+	LaunchStartTime int64               `json:"launch_start_time"`
+	VariantMap      map[string]*Variant `json:"variants"`
 
-	allowListMap map[string]Variant
+	allowListMap map[string]*Variant
 	CohortIds    []string
 }
 
-func (f *Feature) GetAllowListMap() map[string]Variant {
-	if f.allowListMap == nil {
-		f.generateAllowListMap()
-	}
+func (f *Feature) GetAllowListMap() map[string]*Variant {
+	//if f.allowListMap == nil {
+	//	f.GenerateAllowListMap()
+	//}
 	return f.allowListMap
 }
 
-func (f *Feature) generateAllowListMap() {
+func (f *Feature) GenerateAllowListMap() {
 	if f.WhiteList == nil || len(f.WhiteList) == 0 {
 		return
 	}
-	f.allowListMap = make(map[string]Variant, len(f.WhiteList))
+	f.allowListMap = make(map[string]*Variant, len(f.WhiteList))
 	for uid, vid := range f.WhiteList {
 		f.allowListMap[uid] = f.VariantMap[vid]
 	}
